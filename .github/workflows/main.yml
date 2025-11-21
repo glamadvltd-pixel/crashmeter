@@ -1,0 +1,39 @@
+name: Aggiornamento Quotidiano CrashMeter
+
+on:
+  schedule:
+    # Esegue alle 08:00 UTC ogni giorno (circa le 09:00/10:00 in Italia)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # Permette di lanciarlo a mano col pulsante
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permesso fondamentale per salvare i file!
+
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Installazione librerie
+        run: |
+          pip install -r requirements.txt
+
+      - name: Esecuzione CrashMeter Script
+        run: |
+          python main.py
+
+      - name: Commit e Push dei risultati
+        run: |
+          git config --global user.name 'AsiloBot'
+          git config --global user.email 'bot@asilofinanza.com'
+          git add crashmeter_status.json crashmeter_history.csv crashmeter_grafico.png
+          # Il commit avviene solo se ci sono cambiamenti
+          git commit -m "Aggiornamento dati automatico: $(date +'%Y-%m-%d')" || exit 0
+          git push
